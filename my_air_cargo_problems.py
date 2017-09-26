@@ -42,6 +42,10 @@ class AirCargoProblem(Problem):
         aimacode.planning module. It is computationally expensive to call this method directly;
         however, it is called in the constructor and the results cached in the `actions_list` property.
 
+        Action(Fly(p, from, to),
+            PRECOND: At(p, from) ∧ Plane(p) ∧ Airport(from) ∧ Airport(to)
+            EFFECT: ¬ At(p, from) ∧ At(p, to))
+
         Returns:
         ----------
         list<Action>
@@ -56,6 +60,10 @@ class AirCargoProblem(Problem):
 
         def load_actions():
             """Create all concrete Load actions and return a list
+
+            Action(Load(c, p, a),
+                PRECOND: At(c, a) ∧ At(p, a) ∧ Cargo(c) ∧ Plane(p) ∧ Airport(a)
+                EFFECT: ¬ At(c, a) ∧ In(c, p))
 
             :return: list of Action objects
             """
@@ -83,6 +91,10 @@ class AirCargoProblem(Problem):
 
         def unload_actions():
             """Create all concrete Unload actions and return a list
+
+            Action(Unload(c, p, a),
+                PRECOND: In(c, p) ∧ At(p, a) ∧ Cargo(c) ∧ Plane(p) ∧ Airport(a)
+                EFFECT: At(c, a) ∧ ¬ In(c, p))
 
             :return: list of Action objects
             """
@@ -135,8 +147,23 @@ class AirCargoProblem(Problem):
             e.g. 'FTTTFF'
         :return: list of Action objects
         """
-        # TODO implement
         possible_actions = []
+
+        kb = PropKB()
+        kb.tell(decode_state(state, self.state_map).pos_sentence())
+
+        # loop actions, mark false according to +/- clauses
+        for a in self.actions_list:
+            valid = True
+            for pos_clause in a.precond_pos:
+                if pos_clause not in kb.clauses:
+                    valid = False
+            for neg_clause in a.precond_neg:
+                if neg_clause in kb.clauses:
+                    valid = False
+            if valid:
+                possible_actions.append(a)
+
         return possible_actions
 
     def result(self, state: str, action: Action):
@@ -148,9 +175,28 @@ class AirCargoProblem(Problem):
         :param action: Action applied
         :return: resulting state after action
         """
-        # TODO implement
+        
         new_state = FluentState([], [])
+        old_state = decode_state(state, self.state_map)
+
+        for f in old_state.pos:
+            if f not in action.effect_rem:
+                new_state.pos.append(f)
+        
+        for f in old_state.neg:
+            if f not in action.effect_add:
+                new_state.neg.append(f)
+
+        for f in action.effect_add:
+            if f not in new_state.pos:
+                new_state.pos.append(f)
+            
+        for f in action.effect_rem:
+            if f not in new_state.neg:
+                new_state.neg.append(f)
+
         return encode_state(new_state, self.state_map)
+
 
     def goal_test(self, state: str) -> bool:
         """ Test the state to see if goal is reached
@@ -189,12 +235,27 @@ class AirCargoProblem(Problem):
         conditions by ignoring the preconditions required for an action to be
         executed.
         """
-        # TODO implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
-        count = 0
+        # (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
+
+        kb = PropKB()
+        kb.tell(decode_state(node.state, self.state_map).pos_sentence())
+
+        #count = 0
+        count = sum(gc not in kb.clauses for gc in self.goal)
+
+
         return count
 
 
 def air_cargo_p1() -> AirCargoProblem:
+    """
+    Init(At(C1, SFO) ∧ At(C2, JFK) 
+        ∧ At(P1, SFO) ∧ At(P2, JFK) 
+        ∧ Cargo(C1) ∧ Cargo(C2) 
+        ∧ Plane(P1) ∧ Plane(P2)
+        ∧ Airport(JFK) ∧ Airport(SFO))
+    Goal(At(C1, JFK) ∧ At(C2, SFO))
+    """
     cargos = ['C1', 'C2']
     planes = ['P1', 'P2']
     airports = ['JFK', 'SFO']
@@ -220,10 +281,24 @@ def air_cargo_p1() -> AirCargoProblem:
 
 
 def air_cargo_p2() -> AirCargoProblem:
-    # TODO implement Problem 2 definition
+    """
+    Init(At(C1, SFO) ∧ At(C2, JFK) ∧ At(C3, ATL) 
+        ∧ At(P1, SFO) ∧ At(P2, JFK) ∧ At(P3, ATL) 
+        ∧ Cargo(C1) ∧ Cargo(C2) ∧ Cargo(C3)
+        ∧ Plane(P1) ∧ Plane(P2) ∧ Plane(P3)
+        ∧ Airport(JFK) ∧ Airport(SFO) ∧ Airport(ATL))
+    Goal(At(C1, JFK) ∧ At(C2, SFO) ∧ At(C3, SFO))
+    """
     pass
 
 
 def air_cargo_p3() -> AirCargoProblem:
-    # TODO implement Problem 3 definition
+    """
+    Init(At(C1, SFO) ∧ At(C2, JFK) ∧ At(C3, ATL) ∧ At(C4, ORD) 
+        ∧ At(P1, SFO) ∧ At(P2, JFK) 
+        ∧ Cargo(C1) ∧ Cargo(C2) ∧ Cargo(C3) ∧ Cargo(C4)
+        ∧ Plane(P1) ∧ Plane(P2)
+        ∧ Airport(JFK) ∧ Airport(SFO) ∧ Airport(ATL) ∧ Airport(ORD))
+    Goal(At(C1, JFK) ∧ At(C3, JFK) ∧ At(C2, SFO) ∧ At(C4, SFO))
+    """
     pass
