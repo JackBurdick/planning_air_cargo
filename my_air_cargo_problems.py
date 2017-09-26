@@ -309,9 +309,10 @@ def air_cargo_p2() -> AirCargoProblem:
            expr('At(, )'),
            ]
     init = FluentState(pos, neg)
-    goal = [expr('At(, )'),
-            expr('At(, )'),
-            ]
+    goal = [expr('At(C1, JFK)'),
+            expr('At(C2, SFO)'),
+            expr('At(C3, SFO)'),
+           ]
     return AirCargoProblem(cargos, planes, airports, init, goal)
 
 
@@ -344,7 +345,9 @@ def air_cargo_p3() -> AirCargoProblem:
            expr('At(, )'),
            ]
     init = FluentState(pos, neg)
-    goal = [expr('At(, )'),
-            expr('At(, )'),
-            ]
+    goal = [expr('At(C1, JFK)'),
+            expr('At(C3, JFK)'),
+            expr('At(C2, SFO)'),
+            expr('At(C4, SFO)'),
+           ]
     return AirCargoProblem(cargos, planes, airports, init, goal)
