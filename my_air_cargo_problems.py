@@ -52,12 +52,6 @@ class AirCargoProblem(Problem):
             list of Action objects
         """
 
-        # TODO create concrete Action objects based on the domain action schema for: Load, Unload, and Fly
-        # concrete actions definition: specific literal action that does not include variables as with the schema
-        # for example, the action schema 'Load(c, p, a)' can represent the concrete actions 'Load(C1, P1, SFO)'
-        # or 'Load(C2, P2, JFK)'.  The actions for the planning problem must be concrete because the problems in
-        # forward search and Planning Graphs must use Propositional Logic
-
         def load_actions():
             """Create all concrete Load actions and return a list
 
@@ -67,7 +61,6 @@ class AirCargoProblem(Problem):
 
             :return: list of Action objects
             """
-            
 
             # loop all airport+plane+cargo combinations
             loads = []
@@ -82,9 +75,9 @@ class AirCargoProblem(Problem):
                         effect_add = [expr("In({}, {})".format(c, p))]
                         effect_rem = [expr("At({}, {})".format(c, a))]
                         # action
-                        load = Action(expr("Unload({}, {}, {})".format(c, p, a)),
-                                     [precond_pos, precond_neg],
-                                     [effect_add, effect_rem])
+                        load = Action(expr("Load({}, {}, {})".format(c, p, a)),
+                                      [precond_pos, precond_neg],
+                                      [effect_add, effect_rem])
                         loads.append(load)
 
             return loads
@@ -98,7 +91,7 @@ class AirCargoProblem(Problem):
 
             :return: list of Action objects
             """
-            
+
             # loop all airport+plane+cargo combinations
             unloads = []
             for a in self.airports:
@@ -235,14 +228,13 @@ class AirCargoProblem(Problem):
         conditions by ignoring the preconditions required for an action to be
         executed.
         """
+        
         # (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
-
         kb = PropKB()
         kb.tell(decode_state(node.state, self.state_map).pos_sentence())
 
         #count = 0
         count = sum(gc not in kb.clauses for gc in self.goal)
-
 
         return count
 
